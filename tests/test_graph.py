@@ -89,3 +89,36 @@ def test_build_tree_text(sample_project: Path) -> None:
     text = build_tree_text(result)
     assert "design:characters" in text
     assert "design:beat-sheet" in text
+
+
+def test_find_cycles_detected(tmp_path: Path) -> None:
+    """Create a cycle and verify detection."""
+    from sdcoh.scanner import ScanResult
+
+    result = ScanResult()
+    result.nodes = [
+        {"id": "a", "type": "design", "path": "a.md", "mtime": "2026-01-01T00:00:00+00:00"},
+        {"id": "b", "type": "design", "path": "b.md", "mtime": "2026-01-01T00:00:00+00:00"},
+    ]
+    result.edges = [
+        {"source": "a", "target": "b", "relation": "derives_from", "direction": "depends_on"},
+        {"source": "b", "target": "a", "relation": "derives_from", "direction": "depends_on"},
+    ]
+    cycles = find_cycles(result)
+    assert len(cycles) > 0
+
+
+def test_validate_references_broken(tmp_path: Path) -> None:
+    """Detect broken references."""
+    from sdcoh.scanner import ScanResult
+
+    result = ScanResult()
+    result.nodes = [
+        {"id": "a", "type": "design", "path": "a.md", "mtime": "2026-01-01T00:00:00+00:00"},
+    ]
+    result.edges = [
+        {"source": "a", "target": "nonexistent", "relation": "derives_from", "direction": "depends_on"},
+    ]
+    broken = validate_references(result)
+    assert len(broken) == 1
+    assert "nonexistent" in broken[0]

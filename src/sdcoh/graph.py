@@ -56,16 +56,15 @@ def find_impact(
                 visited.add(src)
                 impacted.append({"id": src, "relation": edge["relation"]})
                 walk(src, depth + 1)
+        # Update edges: what does nid trigger updates to?
+        for edge in upd.get(nid, []):
+            tgt = edge["target"]
+            if tgt not in visited:
+                visited.add(tgt)
+                impacted.append({"id": tgt, "relation": edge["relation"]})
+                walk(tgt, depth + 1)
 
     visited.add(node_id)
-
-    # Update edges from the changed node (direct only)
-    for edge in upd.get(node_id, []):
-        tgt = edge["target"]
-        if tgt not in visited:
-            visited.add(tgt)
-            impacted.append({"id": tgt, "relation": edge["relation"]})
-
     walk(node_id, 1)
     return impacted
 

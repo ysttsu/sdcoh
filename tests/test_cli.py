@@ -9,9 +9,10 @@ from sdcoh.cli import cli
 
 def test_cli_init(tmp_path: Path) -> None:
     runner = CliRunner()
-    result = runner.invoke(cli, ["init", "--name", "Test Novel"], catch_exceptions=False)
+    result = runner.invoke(cli, ["init", "--name", "Test Novel", "--path", str(tmp_path)], catch_exceptions=False)
     assert result.exit_code == 0
-    assert (Path.cwd() / "sdcoh.yml").exists() or "Created" in result.output
+    assert (tmp_path / "sdcoh.yml").exists()
+    assert "Created" in result.output
 
 
 def test_cli_scan(sample_project: Path) -> None:

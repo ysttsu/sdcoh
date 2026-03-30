@@ -43,7 +43,11 @@ def _load_graph(root: Path) -> ScanResult:
 def _node_id_from_path(result: ScanResult, file_path: str) -> str | None:
     """Resolve a file path to a node ID."""
     for node in result.nodes:
-        if node["path"] == file_path or node["path"].endswith(file_path):
+        if node["path"] == file_path:
+            return node["id"]
+    # Fallback: suffix match with path separator to avoid ambiguity
+    for node in result.nodes:
+        if node["path"].endswith("/" + file_path):
             return node["id"]
     return None
 

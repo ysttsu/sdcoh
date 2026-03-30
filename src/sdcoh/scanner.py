@@ -63,13 +63,15 @@ def _process_file(
     node_ids: set[str],
 ) -> None:
     """Process a single Markdown file."""
+    rel_path = str(md_file.relative_to(root))
+
     try:
         post = frontmatter.load(str(md_file))
-    except Exception:
+    except Exception as e:
+        result.warnings.append(f"{rel_path} (parse error: {e})")
         return
 
     sdcoh_meta = post.metadata.get("sdcoh")
-    rel_path = str(md_file.relative_to(root))
 
     if sdcoh_meta is None:
         result.warnings.append(rel_path)
