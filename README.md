@@ -1,5 +1,7 @@
 # sdcoh — Story Design Coherence
 
+[日本語版 README](README.ja.md)
+
 **Manage dependency graphs between story design documents.** Detect change impact and stale downstream files.
 
 When writing novels with AI, you end up with dozens of interconnected design documents: character sheets, beat sheets, foreshadowing ledgers, style guides, briefs, and episode drafts. Change one, and you need to update five others. Forget one, and your story has inconsistencies.
