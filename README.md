@@ -1,5 +1,10 @@
 # sdcoh — Story Design Coherence
 
+[![PyPI](https://img.shields.io/pypi/v/sdcoh?style=flat-square&color=blue)](https://pypi.org/project/sdcoh/)
+[![Python](https://img.shields.io/pypi/pyversions/sdcoh?style=flat-square)](https://pypi.org/project/sdcoh/)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/ysttsu/sdcoh?style=flat-square)](https://github.com/ysttsu/sdcoh/stargazers)
+
 [日本語版 README](README.ja.md)
 
 **Manage dependency graphs between story design documents.** Detect change impact and stale downstream files.

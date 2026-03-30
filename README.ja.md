@@ -1,5 +1,12 @@
 # sdcoh — Story Design Coherence
 
+[![PyPI](https://img.shields.io/pypi/v/sdcoh?style=flat-square&color=blue)](https://pypi.org/project/sdcoh/)
+[![Python](https://img.shields.io/pypi/pyversions/sdcoh?style=flat-square)](https://pypi.org/project/sdcoh/)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/ysttsu/sdcoh?style=flat-square)](https://github.com/ysttsu/sdcoh/stargazers)
+
+[English README](README.md)
+
 **小説の設計書間に依存グラフを張り、変更の波及を可視化するCLIツール。**
 
 AIで小説を書くと、設計書がどんどん増える。キャラシート、ビートシート、伏線台帳、文体定義、ブリーフ、原稿。1つ変えたら5つ更新が必要。1つ忘れたら、矛盾が生まれる。
