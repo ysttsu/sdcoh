@@ -161,6 +161,38 @@ novel-project/
 | `extracts_from` | ここから抽出した | 表現ログ ← 原稿 |
 | `triggers_update` | 変更されたら更新が必要 | Continuity ← 原稿 |
 
+### Globパターン
+
+fnmatch形式のglobパターンで、複数ノードへの依存を一括宣言できる:
+
+```yaml
+# design/characters.md — 変更時に全episode・brief・voiceカードへ波及
+sdcoh:
+  id: "design:characters"
+  updates:
+    - id: "episode:*"
+      relation: triggers_update
+    - id: "brief:*"
+      relation: triggers_update
+    - id: "design:voice-*"
+      relation: triggers_update
+```
+
+パターンはスキャン時に展開され、`graph.json`には具体的なエッジのみ保存される。対応構文: `*`（任意文字列）、`?`（1文字）、`[seq]`（文字集合）。
+
+設計書側でまとめて宣言することで、原稿やブリーフのフロントマターを最小限にできる:
+
+```yaml
+# drafts/ep05.md — 例外的な依存だけ書けばOK
+sdcoh:
+  id: "episode:ep05"
+  depends_on:
+    - id: "design:foreshadow-ledger"
+      relation: references
+```
+
+0件マッチのglobパターンは `sdcoh scan` 時にwarningが出る。
+
 ### 双方向依存
 
 一部の関係は双方向。`depends_on`（上流）と `updates`（下流）を組み合わせて表現する:

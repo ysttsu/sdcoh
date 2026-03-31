@@ -161,6 +161,38 @@ novel-project/
 | `extracts_from` | Extracted from this source | expression log ← episode |
 | `triggers_update` | Change triggers update | continuity ← episode |
 
+### Glob Patterns
+
+Use fnmatch-style glob patterns to declare dependencies on multiple nodes at once:
+
+```yaml
+# design/characters.md — updates all episodes and briefs when changed
+sdcoh:
+  id: "design:characters"
+  updates:
+    - id: "episode:*"
+      relation: triggers_update
+    - id: "brief:*"
+      relation: triggers_update
+    - id: "design:voice-*"
+      relation: triggers_update
+```
+
+Patterns are expanded at scan time — `graph.json` contains only concrete edges. Supported glob syntax: `*` (any string), `?` (single char), `[seq]` (character set).
+
+This lets you declare dependencies from the design doc side, keeping episode/brief frontmatter minimal:
+
+```yaml
+# drafts/ep05.md — only exception-specific dependencies needed
+sdcoh:
+  id: "episode:ep05"
+  depends_on:
+    - id: "design:foreshadow-ledger"
+      relation: references
+```
+
+A glob pattern that matches zero nodes produces a warning during `sdcoh scan`.
+
 ### Bidirectional Dependencies
 
 Some relationships go both ways. Use `depends_on` for upstream and `updates` for downstream:
