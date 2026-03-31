@@ -87,3 +87,58 @@ def sample_project(tmp_path: Path) -> Path:
     )
 
     return tmp_path
+
+
+@pytest.fixture
+def glob_project(tmp_path: Path) -> Path:
+    """Project where dependencies use glob patterns."""
+    (tmp_path / "sdcoh.yml").write_text(
+        "project:\n"
+        '  name: "Glob Test"\n'
+        "scan:\n"
+        "  - design/\n"
+        "  - drafts/\n"
+    )
+
+    design = tmp_path / "design"
+    design.mkdir()
+
+    (design / "characters.md").write_text(
+        "---\n"
+        "sdcoh:\n"
+        '  id: "design:characters"\n'
+        "---\n"
+        "# Characters\n"
+    )
+
+    (design / "beat-sheet.md").write_text(
+        "---\n"
+        "sdcoh:\n"
+        '  id: "design:beat-sheet"\n'
+        "---\n"
+        "# Beat Sheet\n"
+    )
+
+    (design / "style.md").write_text(
+        "---\n"
+        "sdcoh:\n"
+        '  id: "design:style"\n'
+        "---\n"
+        "# Style\n"
+    )
+
+    drafts = tmp_path / "drafts"
+    drafts.mkdir()
+
+    (drafts / "ep01.md").write_text(
+        "---\n"
+        "sdcoh:\n"
+        '  id: "episode:ep01"\n'
+        "  depends_on:\n"
+        '    - id: "design:*"\n'
+        '      relation: implements\n'
+        "---\n"
+        "# Episode 1\n"
+    )
+
+    return tmp_path

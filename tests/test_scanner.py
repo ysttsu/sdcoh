@@ -85,3 +85,54 @@ def test_expand_pattern_no_match_returns_empty() -> None:
     all_ids = {"design:characters", "episode:ep01"}
     result = _expand_pattern("brief:*", all_ids, "episode:ep01")
     assert result == []
+
+
+def test_scan_expands_glob_depends_on(glob_project: Path) -> None:
+    cfg = load_config(glob_project)
+    result = scan_project(cfg)
+    deps_edges = [
+        e for e in result.edges
+        if e["source"] == "episode:ep01" and e["direction"] == "depends_on"
+    ]
+    targets = sorted(e["target"] for e in deps_edges)
+    assert targets == ["design:beat-sheet", "design:characters", "design:style"]
+    assert all(e["relation"] == "implements" for e in deps_edges)
+
+
+def test_scan_expands_glob_updates(glob_project: Path) -> None:
+    design_dir = glob_project / "design"
+    (design_dir / "beat-sheet.md").write_text(
+        "---\n"
+        "sdcoh:\n"
+        '  id: "design:beat-sheet"\n'
+        "  updates:\n"
+        '    - id: "episode:*"\n'
+        '      relation: triggers_update\n'
+        "---\n"
+        "# Beat Sheet\n"
+    )
+    cfg = load_config(glob_project)
+    result = scan_project(cfg)
+    update_edges = [
+        e for e in result.edges
+        if e["source"] == "design:beat-sheet" and e["direction"] == "updates"
+    ]
+    assert len(update_edges) == 1
+    assert update_edges[0]["target"] == "episode:ep01"
+
+
+def test_scan_glob_no_match_warns(glob_project: Path) -> None:
+    drafts = glob_project / "drafts"
+    (drafts / "ep01.md").write_text(
+        "---\n"
+        "sdcoh:\n"
+        '  id: "episode:ep01"\n'
+        "  depends_on:\n"
+        '    - id: "research:*"\n'
+        '      relation: references\n'
+        "---\n"
+        "# Episode 1\n"
+    )
+    cfg = load_config(glob_project)
+    result = scan_project(cfg)
+    assert any("research:*" in w for w in result.warnings)

@@ -46,13 +46,42 @@ def scan_project(cfg: SdcohConfig) -> ScanResult:
     """Scan all Markdown files in configured directories and build the graph."""
     result = ScanResult()
     node_ids: set[str] = set()
+    parsed_files: list[tuple[Path, dict]] = []
 
+    # Pass 1: collect all nodes
     for scan_dir in cfg.scan_dirs:
         dir_path = cfg.root / scan_dir.rstrip("/")
         if not dir_path.exists():
             continue
         for md_file in sorted(dir_path.rglob("*.md")):
-            _process_file(md_file, cfg.root, result, node_ids)
+            sdcoh_meta = _parse_frontmatter(md_file, cfg.root, result)
+            if sdcoh_meta is None:
+                continue
+            node_id = sdcoh_meta.get("id")
+            if not node_id:
+                rel_path = str(md_file.relative_to(cfg.root))
+                result.warnings.append(rel_path)
+                continue
+            if node_id not in node_ids:
+                node_type = node_id.split(":")[0] if ":" in node_id else "unknown"
+                mtime = datetime.fromtimestamp(
+                    md_file.stat().st_mtime, tz=timezone.utc
+                ).isoformat()
+                result.nodes.append(
+                    {
+                        "id": node_id,
+                        "type": node_type,
+                        "path": str(md_file.relative_to(cfg.root)),
+                        "mtime": mtime,
+                    }
+                )
+                node_ids.add(node_id)
+            parsed_files.append((md_file, sdcoh_meta))
+
+    # Pass 2: build edges with pattern expansion
+    for md_file, sdcoh_meta in parsed_files:
+        node_id = sdcoh_meta["id"]
+        _build_edges(node_id, sdcoh_meta, node_ids, result)
 
     return result
 
@@ -75,64 +104,58 @@ def _expand_pattern(
     )
 
 
-def _process_file(
-    md_file: Path,
-    root: Path,
-    result: ScanResult,
-    node_ids: set[str],
-) -> None:
-    """Process a single Markdown file."""
+def _parse_frontmatter(
+    md_file: Path, root: Path, result: ScanResult
+) -> dict | None:
+    """Parse frontmatter and return sdcoh metadata, or None."""
     rel_path = str(md_file.relative_to(root))
-
     try:
         post = frontmatter.load(str(md_file))
     except Exception as e:
         result.warnings.append(f"{rel_path} (parse error: {e})")
-        return
-
+        return None
     sdcoh_meta = post.metadata.get("sdcoh")
-
     if sdcoh_meta is None:
         result.warnings.append(rel_path)
-        return
+        return None
+    return sdcoh_meta
 
-    node_id = sdcoh_meta.get("id")
-    if not node_id:
-        result.warnings.append(rel_path)
-        return
 
-    node_type = node_id.split(":")[0] if ":" in node_id else "unknown"
-    mtime = datetime.fromtimestamp(
-        md_file.stat().st_mtime, tz=timezone.utc
-    ).isoformat()
-
-    if node_id not in node_ids:
-        result.nodes.append(
-            {
-                "id": node_id,
-                "type": node_type,
-                "path": rel_path,
-                "mtime": mtime,
-            }
-        )
-        node_ids.add(node_id)
-
+def _build_edges(
+    node_id: str,
+    sdcoh_meta: dict,
+    all_node_ids: set[str],
+    result: ScanResult,
+) -> None:
+    """Build edges from depends_on and updates, expanding glob patterns."""
     for dep in sdcoh_meta.get("depends_on", []):
-        result.edges.append(
-            {
-                "source": node_id,
-                "target": dep["id"],
-                "relation": dep["relation"],
-                "direction": "depends_on",
-            }
-        )
+        targets = _expand_pattern(dep["id"], all_node_ids, node_id)
+        if not targets and any(c in dep["id"] for c in ("*", "?", "[")):
+            result.warnings.append(
+                f'{node_id}: pattern "{dep["id"]}" matched 0 nodes'
+            )
+        for target_id in targets:
+            result.edges.append(
+                {
+                    "source": node_id,
+                    "target": target_id,
+                    "relation": dep["relation"],
+                    "direction": "depends_on",
+                }
+            )
 
     for upd in sdcoh_meta.get("updates", []):
-        result.edges.append(
-            {
-                "source": node_id,
-                "target": upd["id"],
-                "relation": upd["relation"],
-                "direction": "updates",
-            }
-        )
+        targets = _expand_pattern(upd["id"], all_node_ids, node_id)
+        if not targets and any(c in upd["id"] for c in ("*", "?", "[")):
+            result.warnings.append(
+                f'{node_id}: pattern "{upd["id"]}" matched 0 nodes'
+            )
+        for target_id in targets:
+            result.edges.append(
+                {
+                    "source": node_id,
+                    "target": target_id,
+                    "relation": upd["relation"],
+                    "direction": "updates",
+                }
+            )
