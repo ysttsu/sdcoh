@@ -1,7 +1,7 @@
 # sdcoh — Story Design Coherence
 
-[![PyPI](https://img.shields.io/pypi/v/sdcoh?style=flat-square&color=blue&v=1)](https://pypi.org/project/sdcoh/)
-[![Python](https://img.shields.io/pypi/pyversions/sdcoh?style=flat-square&v=1)](https://pypi.org/project/sdcoh/)
+[![PyPI](https://img.shields.io/pypi/v/sdcoh?style=flat-square&color=blue&v=2)](https://pypi.org/project/sdcoh/)
+[![Python](https://img.shields.io/pypi/pyversions/sdcoh?style=flat-square&v=2)](https://pypi.org/project/sdcoh/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/ysttsu/sdcoh?style=flat-square)](https://github.com/ysttsu/sdcoh/stargazers)
 
