@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import frontmatter
+from fnmatch import fnmatch
 
 from sdcoh.config import SdcohConfig
 
@@ -54,6 +55,24 @@ def scan_project(cfg: SdcohConfig) -> ScanResult:
             _process_file(md_file, cfg.root, result, node_ids)
 
     return result
+
+
+def _expand_pattern(
+    pattern: str,
+    all_node_ids: set[str],
+    self_id: str,
+) -> list[str]:
+    """Expand a glob pattern against known node IDs.
+
+    If pattern contains no glob characters, returns [pattern] as-is.
+    Otherwise returns sorted matched IDs, excluding self_id.
+    """
+    if not any(c in pattern for c in ("*", "?", "[")):
+        return [pattern]
+    return sorted(
+        nid for nid in all_node_ids
+        if fnmatch(nid, pattern) and nid != self_id
+    )
 
 
 def _process_file(

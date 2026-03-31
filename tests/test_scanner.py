@@ -2,7 +2,7 @@
 from pathlib import Path
 
 from sdcoh.config import load_config
-from sdcoh.scanner import scan_project, ScanResult
+from sdcoh.scanner import scan_project, ScanResult, _expand_pattern
 
 
 def test_scan_finds_all_nodes(sample_project: Path) -> None:
@@ -61,3 +61,27 @@ def test_scan_saves_graph_json(sample_project: Path) -> None:
     result.save(cfg.root)
     graph_path = cfg.root / ".sdcoh" / "graph.json"
     assert graph_path.exists()
+
+
+def test_expand_pattern_literal_returns_as_is() -> None:
+    all_ids = {"design:characters", "design:beat-sheet", "episode:ep01"}
+    result = _expand_pattern("design:characters", all_ids, "episode:ep01")
+    assert result == ["design:characters"]
+
+
+def test_expand_pattern_glob_matches() -> None:
+    all_ids = {"design:characters", "design:beat-sheet", "design:style", "episode:ep01"}
+    result = _expand_pattern("design:*", all_ids, "episode:ep01")
+    assert result == ["design:beat-sheet", "design:characters", "design:style"]
+
+
+def test_expand_pattern_excludes_self() -> None:
+    all_ids = {"design:characters", "design:beat-sheet", "design:style"}
+    result = _expand_pattern("design:*", all_ids, "design:characters")
+    assert result == ["design:beat-sheet", "design:style"]
+
+
+def test_expand_pattern_no_match_returns_empty() -> None:
+    all_ids = {"design:characters", "episode:ep01"}
+    result = _expand_pattern("brief:*", all_ids, "episode:ep01")
+    assert result == []
